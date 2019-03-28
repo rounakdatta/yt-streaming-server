@@ -2,6 +2,7 @@ from subprocess import Popen, PIPE
 import requests
 import base64
 import os
+from pydub import AudioSegment
 
 def getFullAudio(audioURL, videoID):
     print('Getting complete audio file')
@@ -29,8 +30,11 @@ def getChunkedData(audioURL, videoID):
     print('Getting chunked audio data')
     r = requests.get(audioURL, stream=True)
 
+    unitFileLength = 0
+
     i = 0
-    for chunk in r.iter_content(chunk_size=15*1024):
+    fullFile = b''
+    for chunk in r.iter_content(chunk_size=100*1024):
 
         if encoded:
             outChunk = base64.b64encode(chunk)
@@ -41,10 +45,20 @@ def getChunkedData(audioURL, videoID):
             os.makedirs('./data/' + videoID)
         except:
             pass
+        
+        fullFile += outChunk
 
         f = open('./data/' + videoID + '/chunk' + str(i) + '.mp3', 'wb+')
-        f.write(outChunk)
+        f.write(fullFile)
         f.close()
+
+        audioFile = AudioSegment.from_file('./data/' + videoID + '/chunk' + str(i) + '.mp3')
+
+        if i == 0:
+            unitFileLength = audioFile.duration_seconds
+
+        audioFile = audioFile[-(unitFileLength * 1000):]
+        audioFile.export('./data/' + videoID + '/final' + str(i) + '.mp3', format='mp3', bitrate='128k')
 
         i += 1
         print(i)
@@ -52,11 +66,11 @@ def getChunkedData(audioURL, videoID):
 # change this to False if you want the decoded \x00-like format
 encoded = False
 
-videoID = '8dsctieMibU'
+videoID = 'ZAfAud_M_mg'
 process = Popen(['youtube-dl', '--get-url', '-f', '140', 'https://www.youtube.com/watch?v=' + videoID], stdout=PIPE, stderr=PIPE)
 stdout, stderr = process.communicate()
 payloadURL = stdout.decode("utf-8") 
 print(payloadURL)
 
 getChunkedData(payloadURL, videoID)
-getFullAudio(payloadURL, videoID)
+#getFullAudio(payloadURL, videoID)
