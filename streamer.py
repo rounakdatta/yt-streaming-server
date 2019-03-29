@@ -58,7 +58,7 @@ def getChunkedData(audioURL, videoID):
             unitFileLength = audioFile.duration_seconds
 
         audioFile = audioFile[-(unitFileLength * 1000):]
-        audioFile.export('./data/' + videoID + '/final' + str(i) + '.mp3', format='mp3', bitrate='128k')
+        audioFile.export('./data/' + videoID + '/chunk' + str(i) + '.mp3', format='mp3', bitrate='128k')
 
         i += 1
         print(i)
